@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mystic Tarot - ดูดวงไพ่ทาโรต์ออนไลน์</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: radial-gradient(circle at top, #1e1b4b, #0f172a, #020617);
+      min-height: 100vh;
+      color: #f8fafc;
+    }
+    .font-cinzel {
+      font-family: 'Cinzel', serif;
+    }
+
+    /* สไตล์เฉพาะสำหรับไพ่ในสำรับด้านล่าง (ใช้ position: relative เพื่อให้แสดงผลทุกหน้าจอแน่นอน) */
+    .deck-card-item {
+      position: relative;
+      background: linear-gradient(135deg, #312e81 0%, #1e1b4b 50%, #0f172a 100%);
+      border: 2px solid #fbbf24;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+      transition: all 0.25s ease;
+    }
+    .deck-card-item:hover {
+      transform: translateY(-6px) scale(1.05);
+      box-shadow: 0 8px 20px rgba(251, 191, 36, 0.45);
+    }
+    .deck-card-item.selected {
+      opacity: 0.2;
+      pointer-events: none;
+      transform: scale(0.88);
+      border-color: #64748b;
+    }
+
+    /* สไตล์สำหรับการ์ดคำทำนาย 3D Flip */
+    .perspective {
+      perspective: 1000px;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .card-flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 0.75rem;
+    }
+    .card-back {
+      background: linear-gradient(135deg, #312e81 0%, #1e1b4b 50%, #0f172a 100%);
+      border: 2px solid #fbbf24;
+      box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+    }
+    .card-front {
+      transform: rotateY(180deg);
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #f59e0b;
+    }
+    .reversed-icon {
+      transform: rotate(180deg);
+    }
+
+    /* ผังกระดาน Celtic Cross */
+    .celtic-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(68px, 105px));
+      grid-template-rows: repeat(4, auto);
+      gap: 0.75rem;
+      justify-content: center;
+      align-items: center;
+    }
+    .pos-5 { grid-column: 2; grid-row: 1; }
+    .pos-4 { grid-column: 1; grid-row: 2 / span 2; }
+    .pos-center { grid-column: 2; grid-row: 2 / span 2; position: relative; }
+    .pos-6 { grid-column: 3; grid-row: 2 / span 2; }
+    .pos-3 { grid-column: 2; grid-row: 4; }
+    .pos-10 { grid-column: 4; grid-row: 1; }
+    .pos-9  { grid-column: 4; grid-row: 2; }
+    .pos-8  { grid-column: 4; grid-row: 3; }
+    .pos-7  { grid-column: 4; grid-row: 4; }
+    .crossing-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(90deg);
+      z-index: 10;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.85);
+    }
+    .crossing-card:hover {
+      transform: translate(-50%, -50%) rotate(0deg) scale(1.1);
+      z-index: 20;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <p class="text-amber-400 tracking-widest text-sm uppercase font-cinzel mb-1">Celestial Guidance</p>
+      <h1 class="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 font-cinzel">
+        MYSTIC TAROT ONLINE
+      </h1>
+      <p class="text-slate-400 mt-2 text-sm md:text-base">ตั้งจิตอธิษฐาน เลือกโหมดการทำนาย แล้วหยิบไพ่ด้วยสัญชาตญาณของคุณ (สำรับ 78 ใบ)</p>
+    </header>
+
+    <!-- Control Panel -->
+    <section class="bg-slate-900/70 backdrop-blur-md border border-slate-800 rounded-2xl p-6 mb-8 shadow-xl">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div class="md:col-span-2">
+          <label class="block text-sm text-amber-300 mb-2">คำถามในใจของคุณ (ระบุหรือไม่ก็ได้)</label>
+          <input id="questionInput" type="text" placeholder="เช่น การงานในเดือนนี้จะเป็นอย่างไร, ความรักที่กำลังคุยอยู่..." 
+            class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+        </div>
+        <div>
+          <label class="block text-sm text-amber-300 mb-2">รูปแบบการเปิดไพ่</label>
+          <select id="spreadMode" onchange="resetSession()" 
+            class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-400 transition">
+            <option value="1">ไพ่ 1 ใบ (ดูดวงรายวัน / ฟันธง)</option>
+            <option value="3" selected>ไพ่ 3 ใบ (อดีต - ปัจจุบัน - อนาคต)</option>
+            <option value="10">ไพ่ 10 ใบ (Celtic Cross เจาะลึก)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap justify-between items-center mt-6 pt-4 border-t border-slate-800 gap-4">
+        <div id="statusText" class="text-sm text-amber-200 font-medium">
+          กำลังเตรียมสำรับไพ่...
+        </div>
+        <button type="button" onclick="resetSession()" 
+          class="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-semibold px-6 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2">
+          <span>🔄</span> สับไพ่ใหม่
+        </button>
+      </div>
+    </section>
+
+    <!-- พื้นที่วางสำรับไพ่ 78 ใบ -->
+    <section id="deckContainer" class="mb-10 bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4">
+      <div id="deckGrid" class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-13 gap-2.5 justify-items-center">
+        <!-- ไพ่ทั้ง 78 ใบจะแสดงตรงนี้ -->
+      </div>
+    </section>
+
+    <!-- พื้นที่แสดงผลคำทำนาย -->
+    <section id="readingSection" class="hidden">
+      <h2 class="text-2xl font-semibold text-center text-amber-300 mb-6 font-cinzel">
+        ✦ คำทำนายของคุณ ✦
+      </h2>
+      <div id="questionDisplay" class="text-center text-slate-300 italic mb-6"></div>
+      
+      <!-- กระดาน Celtic Cross -->
+      <div id="celticBoardContainer" class="hidden mb-12 overflow-x-auto py-2"></div>
+
+      <!-- การ์ดคำทำนายรายใบ -->
+      <div id="selectedCardsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6 justify-items-center mb-8"></div>
+    </section>
+  </div>
+
+  <script>
+    const majorArcana = [
+      { id: 0, name: "0. The Fool", icon: "🃏", upright: "การเริ่มต้นใหม่ ความอิสระ การผจญภัย โอกาสที่คาดไม่ถึง", reversed: "ความประมาท การตัดสินใจไม่รอบคอบ ความลังเลไม่กล้าก้าวเดิน", advice: "เปิดใจรับสิ่งใหม่ แต่อย่าลืมวางแผนพื้นฐานให้รัดกุม" },
+      { id: 1, name: "I. The Magician", icon: "🪄", upright: "ความคิดสร้างสรรค์ ความสามารถเฉพาะตัว การลงมือทำที่สำเร็จ", reversed: "การขาดความมั่นใจ การใช้ความสามารถผิดทาง การถูกหลอกลวง", advice: "คุณมีทรัพยากรครบแล้ว จงลงมือทำทันที" },
+      { id: 2, name: "II. The High Priestess", icon: "🌙", upright: "สัญชาตญาณแม่นยำ ความลับ ปัญญาภายใน ความสงบนิ่ง", reversed: "ความสับสนในอารมณ์ การปิดบังความจริง การไม่ฟังเสียงหัวใจตัวเอง", advice: "ใช้สติและฟังเสียงสัญชาตญาณมากกว่าคำพูดคนรอบข้าง" },
+      { id: 3, name: "III. The Empress", icon: "👑", upright: "ความอุดมสมบูรณ์ ความก้าวหน้า ความรักที่อบอุ่น ความเมตตา", reversed: "การพึ่งพาผู้อื่นมากเกินไป ความล่าช้า การขาดแรงบันดาลใจ", advice: "ดูแลตัวเองและคนรอบข้างด้วยความรัก ความสำเร็จกำลังเติบโต" },
+      { id: 4, name: "IV. The Emperor", icon: "🦅", upright: "อำนาจ ความมั่นคง ความเป็นผู้นำ การวางระบบระเบียบ", reversed: "ความดื้อรั้น การใช้อำนาจเกินขอบเขต ความตึงเครียดจากกฎเกณฑ์", advice: "ใช้เหตุผลและวินัยในการนำทาง แต่ควรยืดหยุ่นเมื่อจำเป็น" },
+      { id: 5, name: "V. The Hierophant", icon: "🗝️", upright: "ผู้ใหญ่อุปถัมภ์ การศึกษา ขนบธรรมเนียม คำแนะนำที่ดี", reversed: "การแหกกฎ การคิดนอกกรอบ ความอึดอัดจากกรอบเดิมๆ", advice: "การขอคำปรึกษาจากผู้เชี่ยวชาญหรือผู้ใหญ่จะช่วยให้ผ่านวิกฤตได้" },
+      { id: 6, name: "VI. The Lovers", icon: "💞", upright: "ความรักที่ลงตัว การตัดสินใจครั้งสำคัญ ความสัมพันธ์ที่เกื้อกูล", reversed: "ความลังเล รักสามเส้า ความคิดเห็นไม่ตรงกัน การเลือกผิดพลาด", advice: "ทบทวนคุณค่าที่แท้จริงในใจก่อนตัดสินใจเลือกทางเดิน" },
+      { id: 7, name: "VII. The Chariot", icon: "🛡️", upright: "ชัยชนะจากการฝ่าฟัน ความมุ่งมั่น การเดินทาง ความก้าวหน้า", reversed: "การขาดทิศทาง ความใจร้อน อุปสรรคที่ทำให้ต้องชะลอตัว", advice: "มีสมาธิกับเป้าหมาย อย่าให้อารมณ์ชั่ววูบทำให้เสียหลัก" },
+      { id: 8, name: "VIII. Strength", icon: "🦁", upright: "ความเข้มแข็งภายใน ความอดทน การเอาชนะปัญหาด้วยความอ่อนโยน", reversed: "ความท้อแท้ การสูญเสียความมั่นใจ การใช้อารมณ์อยู่เหนือเหตุผล", advice: "ความนิ่งและเมตตาคืออาวุธที่ทรงพลังที่สุดของคุณในตอนนี้" },
+      { id: 9, name: "IX. The Hermit", icon: "🏮", upright: "การทบทวนตัวเอง การค้นพบสัจธรรม ความสันโดษที่เป็นสุข", reversed: "ความโดดเดี่ยว การเก็บตัวมากเกินไป การปฏิเสธคำแนะนำ", advice: "ถอยออกมาพักใจหนึ่งก้าว แล้วคุณจะเห็นคำตอบที่ชัดเจนขึ้น" },
+      { id: 10, name: "X. Wheel of Fortune", icon: "🎡", upright: "จังหวะชีวิตที่ดี โชคลาภ การเปลี่ยนแปลงไปในทางบวก", reversed: "ความผันผวน เรื่องไม่คาดฝัน การฝืนโชคชะตา", advice: "ทุกอย่างมีขึ้นมีลง จงปรับตัวตามการเปลี่ยนแปลงอย่างมีสติ" },
+      { id: 11, name: "XI. Justice", icon: "⚖️", upright: "ความยุติธรรม การตัดสินใจด้วยเหตุผล เอกสารสัญญาที่ถูกต้อง", reversed: "ความไม่เป็นธรรม ความลำเอียง ปัญหาด้านกฎหมายหรือสัญญา", advice: "ตรวจสอบข้อมูลและเอกสารให้รอบคอบ ทำทุกอย่างให้โปร่งใส" },
+      { id: 12, name: "XII. The Hanged Man", icon: "⏳", upright: "การเสียสละ การรอคอยเพื่อสิ่งที่ดีกว่า การมองโลกมุมใหม่", reversed: "ความอึดอัด การยื้อเวลาโดยเปล่าประโยชน์ การไม่ยอมปล่อยวาง", advice: "หยุดดิ้นรนชั่วคราว แล้วเปลี่ยนมุมมองต่อปัญหาที่เผชิญอยู่" },
+      { id: 13, name: "XIII. Death", icon: "🦋", upright: "การจบสิ้นเพื่อเริ่มต้นใหม่ การเปลี่ยนแปลงครั้งใหญ่ การตัดใจ", reversed: "การยึดติดอดีต ความกลัวการเปลี่ยนแปลง การยืดเยื้อ", advice: "ปล่อยวางสิ่งที่หมดเวลาไปแล้ว เพื่อเปิดพื้นที่ให้สิ่งใหม่เข้ามา" },
+      { id: 14, name: "XIV. Temperance", icon: "🏺", upright: "ความสมดุล การประนีประนอม การปรับตัว การเยียวยา", reversed: "ความสุดโต่ง ความไม่ลงรอยกัน การขาดความพอดี", advice: "เดินทางสายกลาง ค่อยๆ ผสานความต่างให้ลงตัว" },
+      { id: 15, name: "XV. The Devil", icon: "⛓️", upright: "ความหลงใหล กิเลส พันธนาการ การทุ่มเทอย่างหนัก", reversed: "การหลุดพ้นจากปัญหา การตาสว่าง การปลดแอกตัวเอง", advice: "ระวังความลุ่มหลงหรือข้อตกลงที่ผูกมัดตัวเองเกินไป" },
+      { id: 16, name: "XVI. The Tower", icon: "⚡", upright: "การเปลี่ยนแปลงกะทันหัน การพังทลายของสิ่งที่ไม่มั่นคง การตื่นรู้", reversed: "การรอดพ้นวิกฤตหวุดหวิด การพยายามประคับประคองสิ่งที่ร้าวฉาน", advice: "ตั้งสติรับมือเรื่องไม่คาดฝัน สิ่งที่พังลงจะนำไปสู่รากฐานที่แข็งแรงกว่าเดิม" },
+      { id: 17, name: "XVII. The Star", icon: "🌟", upright: "ความหวัง แรงบันดาลใจ การฟื้นฟูจิตใจ ข่าวดีที่รอคอย", reversed: "ความผิดหวังเล็กน้อย การหมดไฟ การมองโลกในแง่ร้าย", advice: "ศรัทธาในตัวเอง เส้นทางข้างหน้ายังสว่างไสวเสมอ" },
+      { id: 18, name: "XVIII. The Moon", icon: "🐺", upright: "ความคลุมเครือ ความกังวล จินตนาการ สิ่งที่ยังซ่อนเร้น", reversed: "ความจริงเปิดเผย ความกระจ่าง การก้าวพ้นความกลัว", advice: "อย่าเพิ่งด่วนตัดสินใจจากความกลัว รอให้ข้อมูลชัดเจนก่อน" },
+      { id: 19, name: "XIX. The Sun", icon: "☀️", upright: "ความสำเร็จสูงสุด ความสุข ความชัดเจน ชื่อเสียงและโชคลาภ", reversed: "ความสำเร็จที่ล่าช้าเล็กน้อย ความเหนื่อยล้า การคาดหวังสูงเกินไป", advice: "เปิดรับพลังบวกและแบ่งปันรอยยิ้ม ความสำเร็จอยู่ตรงหน้าแล้ว" },
+      { id: 20, name: "XX. Judgement", icon: "🎺", upright: "การตื่นรู้ การได้รับโอกาสครั้งที่สอง ผลกรรมดีที่ส่งผล", reversed: "ความลังเล การโทษตัวเอง การพลาดโอกาสสำคัญ", advice: "ให้อภัยอดีตของตัวเอง แล้วก้าวรับโอกาสใหม่ด้วยความมั่นใจ" },
+      { id: 21, name: "XXI. The World", icon: "🌍", upright: "ความสมบูรณ์แบบ การบรรลุเป้าหมาย การเดินทางไกลที่ราบรื่น", reversed: "งานที่ค้างคา ขาดขั้นตอนสุดท้าย การปิดจบที่ยังไม่สมบูรณ์", advice: "เก็บรายละเอียดช่วงสุดท้ายให้ครบถ้วน รางวัลใหญ่รอคุณอยู่" }
+    ];
+
+    const minorArcana = [
+      { id: 22, suit: "Wands", name: "Ace of Wands", icon: "🔥", upright: "การเริ่มต้นโปรเจกต์ใหม่ แรงบันดาลใจอันแรงกล้า โอกาสใหม่เรื่องงาน", reversed: "การเริ่มต้นที่ล่าช้า ขาดแรงจูงใจ แผนงานยังไม่ชัดเจน", advice: "คว้าโอกาสที่เข้ามาทันที พลังความคิดสร้างสรรค์กำลังพุ่งสูงสุด" },
+      { id: 23, suit: "Wands", name: "Two of Wands", icon: "🗺️", upright: "การวางแผนอนาคต การขยายกิจการ การมองการณ์ไกล", reversed: "ความกลัวการเปลี่ยนแปลง แผนการไม่รัดกุม ความลังเล", advice: "มองภาพรวมให้กว้างขึ้น แล้ววางแผนระยะยาวอย่างเป็นระบบ" },
+      { id: 24, suit: "Wands", name: "Three of Wands", icon: "🚢", upright: "ความก้าวหน้า การขยับขยาย ผลลัพธ์เริ่มปรากฏ การเดินทางไกล", reversed: "ความล่าช้าในการขนส่งหรือเจรจา อุปสรรคจากระยะทาง", advice: "สิ่งที่ลงทุนลงแรงไปเริ่มเห็นผลแล้ว เตรียมพร้อมสำหรับการขยายตัว" },
+      { id: 25, suit: "Wands", name: "Four of Wands", icon: "🎊", upright: "ความมั่นคง การเฉลิมฉลอง ครอบครัวอบอุ่น งานมงคล", reversed: "ความไม่ลงรอยกันในบ้าน งานล่าช้า ความรู้สึกไม่มั่นคงชั่วคราว", advice: "ชื่นชมความสำเร็จเล็กๆ ร่วมกับคนรอบข้างเพื่อเติมพลังใจ" },
+      { id: 26, suit: "Wands", name: "Five of Wands", icon: "⚔️", upright: "การแข่งขัน ความคิดเห็นไม่ตรงกัน การทำงานร่วมกับคนหมู่มาก", reversed: "การหลีกเลี่ยงความขัดแย้ง การหาข้อตกลงร่วมกันได้", advice: "รับฟังความต่าง เปลี่ยนการปะทะเป็นการระดมสมอง" },
+      { id: 27, suit: "Wands", name: "Six of Wands", icon: "🏆", upright: "ชัยชนะ การได้รับการยอมรับ ชื่อเสียง การเลื่อนตำแหน่ง", reversed: "ความสำเร็จที่ล่าช้า ความหยิ่งทะนง การไม่ได้รับเครดิต", advice: "มั่นใจในศักยภาพ แต่ต้องไม่ลืมขอบคุณทีมงานที่ช่วยผลักดัน" },
+      { id: 28, suit: "Wands", name: "Seven of Wands", icon: "🛡️", upright: "การยืนหยัดปกป้องจุดยืน การต่อสู้ท่ามกลางคู่แข่ง", reversed: "การยอมแพ้ ความเหนื่อยล้าจากการตั้งรับ ถูกกดดันจนเสียหลัก", advice: "อย่ายอมถอยง่ายๆ รักษาความมุ่งมั่นไว้" },
+      { id: 29, suit: "Wands", name: "Eight of Wands", icon: "☄️", upright: "ความรวดเร็ว ข่าวสารด่วน การเดินทางกะทันหัน งานก้าวหน้า", reversed: "ความล่าช้า การสื่อสารผิดพลาด ความรีบร้อน", advice: "เตรียมตัวรับการเปลี่ยนแปลง ตัดสินใจให้ไวและแม่นยำ" },
+      { id: 30, suit: "Wands", name: "Nine of Wands", icon: "🤕", upright: "ความอดทนขั้นสุดท้าย การระแวดระวัง ประสบการณ์สอนให้รอบคอบ", reversed: "ความหวาดระแวงเกินเหตุ ความเหนื่อยล้าสะสม", advice: "อดทนอีกนิดเดียวจะถึงเส้นชัย แต่อย่ากดดันตัวเองเกินไป" },
+      { id: 31, suit: "Wands", name: "Ten of Wands", icon: "🏋️", upright: "ภาระหนักอึ้ง ความรับผิดชอบล้นมือ แบกรับทุกอย่างไว้คนเดียว", reversed: "การปล่อยวางภาระ การกระจายงาน แบกไม่ไหวจนต้องทิ้ง", advice: "รู้จักแบ่งงานให้คนอื่นทำบ้าง ไม่จำเป็นต้องแบกโลกไว้คนเดียว" },
+      { id: 32, suit: "Wands", name: "Page of Wands", icon: "🌱", upright: "ข่าวดีเรื่องงาน การเรียนรู้ทักษะใหม่ ความกระตือรือร้น", reversed: "ความเบื่อง่าย ทำอะไรครึ่งๆ กลางๆ ข่าวลือที่ไม่แน่นอน", advice: "เปิดใจเรียนรู้สิ่งใหม่ด้วยความสนุก แล้วลงมือทำให้ต่อเนื่อง" },
+      { id: 33, suit: "Wands", name: "Knight of Wands", icon: "🐎", upright: "การลุยไปข้างหน้า การเดินทาง กล้าได้กล้าเสีย พลังงานล้นเหลือ", reversed: "ความใจร้อน วู่วาม ขาดการวางแผน เปลี่ยนใจกะทันหัน", advice: "ใช้ความกล้าหาญให้ถูกจังหวะ เบรกอารมณ์ร้อนแล้วคิดให้รอบคอบ" },
+      { id: 34, suit: "Wands", name: "Queen of Wands", icon: "🌻", upright: "ความมั่นใจ เสน่ห์ดึงดูด ความเป็นผู้นำที่อบอุ่น การจัดการยอดเยี่ยม", reversed: "ความขี้หึง อารมณ์แปรปรวน ควบคุมคนอื่นมากเกินไป", advice: "เปล่งประกายด้วยความมั่นใจและทัศนคติเชิงบวก" },
+      { id: 35, suit: "Wands", name: "King of Wands", icon: "🦁", upright: "วิสัยทัศน์กว้างไกล ความเป็นผู้นำระดับสูง ธุรกิจสำเร็จ ผู้ใหญ่ช่วยเหลือ", reversed: "ความเผด็จการ คาดหวังสูงเกินไป ใจร้อนไม่ฟังลูกน้อง", advice: "มองภาพใหญ่และตัดสินใจเด็ดขาด พร้อมเปิดใจรับฟังผู้อื่น" },
+      { id: 36, suit: "Cups", name: "Ace of Cups", icon: "🏆", upright: "ความรักครั้งใหม่ ความสุขใจล้นเปี่ยม มิตรภาพที่ดี ข่าวดี", reversed: "การปิดกั้นหัวใจ ความรักยังไม่สมหวัง อารมณ์อ่อนไหวแปรปรวน", advice: "เปิดใจรับความรู้สึกดีๆ และเริ่มต้นด้วยการรักตัวเอง" },
+      { id: 37, suit: "Cups", name: "Two of Cups", icon: "🥂", upright: "คนรักที่เข้าใจกัน หุ้นส่วนที่เข้าขากันดี ความสัมพันธ์เท่าเทียม", reversed: "ความเข้าใจผิดเล็กน้อย ความสัมพันธ์ไม่สมดุล ห่างเหินชั่วคราว", advice: "พูดคุยกันด้วยความจริงใจและรับฟังอีกฝ่ายอย่างเท่าเทียม" },
+      { id: 38, suit: "Cups", name: "Three of Cups", icon: "🥳", upright: "งานเลี้ยงสังสรรค์ มิตรภาพอบอุ่น ข่าวดีที่ได้ฉลองร่วมกัน", reversed: "การนินทา ปัญหาความสัมพันธ์ซ้อน ใช้จ่ายฟุ่มเฟือย", advice: "ออกไปพบปะเพื่อนฝูงเพื่อเติมพลังบวก แต่ระวังขอบเขต" },
+      { id: 39, suit: "Cups", name: "Four of Cups", icon: "😒", upright: "ความเบื่อหน่าย การเลือกมาก มองข้ามโอกาสดีๆ", reversed: "ตื่นตัวรับโอกาสใหม่ หลุดพ้นจากความเฉื่อยชา เปิดใจอีกครั้ง", advice: "มองสิ่งรอบตัวให้ดี คุณอาจกำลังละเลยโอกาสทอง" },
+      { id: 40, suit: "Cups", name: "Five of Cups", icon: "🥀", upright: "ความผิดหวัง เสียใจกับสิ่งที่สูญเสีย ยังเหลือสิ่งดีๆ อยู่", reversed: "ทำใจยอมรับได้ ให้อภัย ก้าวข้ามความเศร้าเริ่มต้นใหม่", advice: "อย่ายึดติดกับสิ่งที่เสียไป มองสิ่งที่ยังเหลือและมีคุณค่า" },
+      { id: 41, suit: "Cups", name: "Six of Cups", icon: "🧸", upright: "ความคิดถึงอดีต คนรักเก่าติดต่อมา ความบริสุทธิ์ใจ", reversed: "จมปลักกับอดีต ไม่ยอมเติบโต ความหลังรบกวนใจ", advice: "เก็บความทรงจำดีๆ เป็นพลังใจ แต่อยู่กับปัจจุบัน" },
+      { id: 42, suit: "Cups", name: "Seven of Cups", icon: "🌈", upright: "ตัวเลือกมากมาย จินตนาการเพ้อฝัน ความลังเล", reversed: "ตาสว่าง ตัดตัวเลือกที่ไม่จำเป็น เลือกจากความจริง", advice: "แยกแยะระหว่างความฝันกับความจริง เลือกสิ่งที่ทำได้จริง" },
+      { id: 43, suit: "Cups", name: "Eight of Cups", icon: "🚶", upright: "การเดินจากสิ่งที่ไม่อาจเติมเต็ม ค้นหาความหมายใหม่", reversed: "ลังเลที่จะจากลา ทนอยู่ในจุดที่ไม่มีความสุขเพราะกลัว", advice: "กล้าก้าวออกจากจุดที่ทำให้เหนื่อยล้า ไปพบสิ่งที่ดีกว่า" },
+      { id: 44, suit: "Cups", name: "Nine of Cups", icon: "🧞", upright: "ความสมหวังตามคำอธิษฐาน ความพึงพอใจ อุดมสมบูรณ์", reversed: "ความพอใจแค่เปลือกนอก โลภมากเกินพอดี ตามใจตัวเอง", advice: "อิ่มเอมกับความสุขปัจจุบัน และแบ่งปันความปรารถนาดี" },
+      { id: 45, suit: "Cups", name: "Ten of Cups", icon: "🏡", upright: "ครอบครัวสมบูรณ์แบบ ความรักมั่นคงอบอุ่น ความสุขยั่งยืน", reversed: "ความขัดแย้งในครอบครัว ความคาดหวังไม่ตรงความจริง", advice: "ใส่ใจเวลาคุณภาพกับคนในครอบครัวและความรัก" },
+      { id: 46, suit: "Cups", name: "Page of Cups", icon: "🐟", upright: "ข้อความหวานๆ ความรู้สึกโรแมนติก ลางสังหรณ์แม่นยำ", reversed: "อ่อนไหวเกินเหตุ งอนง่าย ไม่เป็นผู้ใหญ่ทางอารมณ์", advice: "ฟังเสียงหัวใจตัวเองและกล้าแสดงความรู้สึกดีๆ ออกไป" },
+      { id: 47, suit: "Cups", name: "Knight of Cups", icon: "🦢", upright: "คนโรแมนติกเข้ามาจีบ ข้อเสนอประทับใจ ทำตามความฝัน", reversed: "คนเจ้าชู้ คำพูดหวานไม่ทำจริง อารมณ์แปรปรวน", advice: "ใช้เสน่ห์และความนุ่มนวล แต่ตรวจสอบความจริงใจด้วย" },
+      { id: 48, suit: "Cups", name: "Queen of Cups", icon: "🐚", upright: "ความอ่อนโยน เข้าอกเข้าใจผู้อื่น ลางสังหรณ์แรงกล้า", reversed: "ซึมซับอารมณ์ลบคนอื่น น้อยใจ พึ่งพาทางใจสูง", advice: "ดูแลจิตใจตัวเองให้แข็งแรงควบคู่กับการเป็นที่ปรึกษาคนอื่น" },
+      { id: 49, suit: "Cups", name: "King of Cups", icon: "🐬", upright: "ความฉลาดทางอารมณ์ ผู้ใหญ่ใจดีปรึกษาได้ เมตตาสุขุม", reversed: "เก็บกดอารมณ์ ใช้อารมณ์ชักจูงผู้อื่น ความแปรปรวน", advice: "รักษาความนิ่งและเมตตา ใช้ความเข้าใจแก้ปัญหา" },
+      { id: 50, suit: "Swords", name: "Ace of Swords", icon: "🗡️", upright: "ความชัดเจน ตัดสินใจเด็ดขาด ชัยชนะด้วยปัญญา", reversed: "ความสับสน การสื่อสารรุนแรง ตัดสินใจผิดพลาด", advice: "ใช้เหตุผลและความจริงเข้าว่า ตัดความลังเลออกไป" },
+      { id: 51, suit: "Swords", name: "Two of Swords", icon: "🙈", upright: "ทางแยกตัดสินใจยาก ปิดกั้นไม่รับรู้ปัญหาชั่วคราว", reversed: "ความจริงปรากฏ หลุดพ้นความลังเล ข้อมูลที่ถูกปิดบังเผย", advice: "เปิดตาเปิดใจรับข้อมูลให้ครบ หลีกเลี่ยงกา
